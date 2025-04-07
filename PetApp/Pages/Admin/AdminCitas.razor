@@ -1,0 +1,83 @@
+﻿@page "/admin/citas"
+@using Microsoft.EntityFrameworkCore
+@using PetApp.Models
+@using Microsoft.AspNetCore.Authorization
+@inject PetApp.Data.PetServicesContext Context
+@attribute [Authorize(Roles = "Administrador")]
+
+<h3>Gestión de Citas</h3>
+
+@if (citas == null)
+{
+    <p>Cargando citas...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Mascota</th>
+                <th>Servicio</th>
+                <th>Fecha</th>
+                <th>Completada</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var cita in citas)
+            {
+                <tr>
+                    <td>@cita.Usuario.UserName</td>
+                    <td>@cita.Mascota.Nombre</td>
+                    <td>@cita.Servicio.Nombre</td>
+                    <td>@cita.FechaHora.ToString("g")</td>
+                    <td>
+                        @if (cita.Completada)
+                        {
+                            <span class="text-success">✔️</span>
+                        }
+                        else
+                        {
+                            <span class="text-warning">⏳</span>
+                        }
+                    </td>
+                    <td>
+                        @if (!cita.Completada)
+                        {
+                            <button class="btn btn-sm btn-success" @onclick="() => MarcarComoCompletada(cita.Id)">Finalizar</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<Cita> citas = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        citas = await Context.Citas
+            .Include(c => c.Usuario)
+            .Include(c => c.Mascota)
+            .Include(c => c.Servicio)
+            .ToListAsync();
+    }
+
+    async Task MarcarComoCompletada(int citaId)
+    {
+        var cita = await Context.Citas.FindAsync(citaId);
+        if (cita != null)
+        {
+            cita.Completada = true;
+            await Context.SaveChangesAsync();
+            citas = await Context.Citas
+                .Include(c => c.Usuario)
+                .Include(c => c.Mascota)
+                .Include(c => c.Servicio)
+                .ToListAsync();
+        }
+    }
+}

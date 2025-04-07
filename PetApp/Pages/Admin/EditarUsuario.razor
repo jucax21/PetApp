@@ -1,0 +1,64 @@
+﻿@page "/admin/editar-usuario/{Id:int}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using PetApp.Models
+@attribute [Authorize(Roles = "Administrador")]
+@inject PetApp.Data.PetServicesContext Context
+@inject NavigationManager Navigation
+
+<h3>Editar Usuario</h3>
+
+@if (usuario == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <EditForm Model="@usuario" OnValidSubmit="GuardarCambios">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div>
+            <label>Nombre:</label>
+            <InputText @bind-Value="usuario.Nombre" class="form-control" />
+        </div>
+        <div>
+            <label>Correo:</label>
+            <InputText @bind-Value="usuario.Correo" class="form-control" />
+        </div>
+        <div>
+            <label>Contraseña:</label>
+            <InputText @bind-Value="usuario.Contrasena" type="password" class="form-control" />
+        </div>
+        <div>
+            <label>Rol:</label>
+            <InputSelect @bind-Value="usuario.Rol" class="form-control">
+                <option value="Cliente">Cliente</option>
+                <option value="Administrador">Administrador</option>
+            </InputSelect>
+        </div>
+
+        <button class="btn btn-success mt-2">Guardar</button>
+        <button class="btn btn-secondary mt-2" @onclick="() => Navigation.NavigateTo("/admin/usuarios")">Cancelar</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    Usuario? usuario;
+
+    protected override async Task OnInitializedAsync()
+    {
+        usuario = await Context.Usuarios.FindAsync(Id);
+    }
+
+    async Task GuardarCambios()
+    {
+        if (usuario != null)
+        {
+            Context.Usuarios.Update(usuario);
+            await Context.SaveChangesAsync();
+            Navigation.NavigateTo("/admin/usuarios");
+        }
+    }
+}

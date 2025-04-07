@@ -1,0 +1,56 @@
+﻿@page "/registro"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using PetApp.Models
+@using PetApp.Services
+@inject NavigationManager Navigation
+@inject PetApp.Services.IAuthService AuthService
+@inject AuthenticationStateProvider AuthProvider
+
+<h3>Registro de Usuario</h3>
+
+<EditForm Model="@nuevoUsuario" OnValidSubmit="RegistrarUsuario">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Nombre:</label>
+        <InputText @bind-Value="nuevoUsuario.Nombre" class="form-control" />
+    </div>
+    <div>
+        <label>Correo:</label>
+        <InputText @bind-Value="nuevoUsuario.Correo" class="form-control" />
+    </div>
+    <div>
+        <label>Contraseña:</label>
+        <InputText @bind-Value="nuevoUsuario.Contrasena" type="password" class="form-control" />
+    </div>
+
+    <button class="btn btn-primary mt-2" type="submit">Registrarse</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <p class="text-danger">@mensaje</p>
+}
+
+@code {
+    Usuario nuevoUsuario = new Usuario();
+    string mensaje = "";
+
+    private async Task RegistrarUsuario()
+    {
+        var existe = await AuthService.LoginAsync(nuevoUsuario.Correo, nuevoUsuario.Contrasena);
+        if (existe != null)
+        {
+            mensaje = "Ya existe un usuario con ese correo.";
+            return;
+        }
+
+        nuevoUsuario.Rol = "Cliente";
+        await AuthService.RegistrarUsuarioAsync(nuevoUsuario);
+
+        ((CustomAuthProvider)AuthProvider).SetUser(nuevoUsuario);
+        Navigation.NavigateTo("/");
+    }
+}

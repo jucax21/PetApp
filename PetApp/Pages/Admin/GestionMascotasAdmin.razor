@@ -1,0 +1,70 @@
+﻿@page "/admin/mascotas"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using PetApp.Models
+@attribute [Authorize(Roles = "Administrador")]
+@inject PetApp.Data.PetServicesContext Context
+@inject NavigationManager Navigation
+
+<h3>Gestión de Mascotas</h3>
+
+@if (mascotas == null)
+{
+    <p>Cargando mascotas...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Raza</th>
+                <th>Edad</th>
+                <th>Dueño</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var m in mascotas)
+            {
+                <tr>
+                    <td>@m.Nombre</td>
+                    <td>@m.Tipo</td>
+                    <td>@m.Raza</td>
+                    <td>@m.Edad</td>
+                    <td>@m.Usuario?.Nombre (@m.Usuario?.Correo)</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" @onclick="() => EditarMascota(m.Id)">Editar</button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => EliminarMascota(m.Id)">Eliminar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<Mascota> mascotas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        mascotas = await Context.Mascotas.Include(m => m.Usuario).ToListAsync();
+    }
+
+    void EditarMascota(int id)
+    {
+        Navigation.NavigateTo($"/admin/editar-mascota/{id}");
+    }
+
+    async Task EliminarMascota(int id)
+    {
+        var mascota = await Context.Mascotas.FindAsync(id);
+        if (mascota != null)
+        {
+            Context.Mascotas.Remove(mascota);
+            await Context.SaveChangesAsync();
+            mascotas = await Context.Mascotas.Include(m => m.Usuario).ToListAsync(); // refrescar
+        }
+    }
+}

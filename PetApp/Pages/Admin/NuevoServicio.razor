@@ -1,0 +1,40 @@
+﻿@page "/admin/servicios/nuevo"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using PetApp.Models
+@attribute [Authorize(Roles = "Administrador")]
+@inject PetApp.Data.PetServicesContext Context
+@inject NavigationManager Navigation
+
+<h3>Nuevo Servicio</h3>
+
+<EditForm Model="servicio" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Nombre:</label>
+        <InputText @bind-Value="servicio.Nombre" class="form-control" />
+    </div>
+    <div>
+        <label>Descripción:</label>
+        <InputTextArea @bind-Value="servicio.Descripcion" class="form-control" />
+    </div>
+    <div>
+        <label>Precio:</label>
+        <InputNumber @bind-Value="servicio.Precio" class="form-control" />
+    </div>
+
+    <button class="btn btn-success mt-2">Guardar</button>
+</EditForm>
+
+@code {
+    Servicio servicio = new();
+
+    async Task Guardar()
+    {
+        Context.Servicios.Add(servicio);
+        await Context.SaveChangesAsync();
+        Navigation.NavigateTo("/admin/servicios");
+    }
+}

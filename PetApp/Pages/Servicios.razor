@@ -1,0 +1,35 @@
+﻿@page "/servicios"
+@using Microsoft.EntityFrameworkCore
+@using PetApp.Models
+@inject PetApp.Data.PetServicesContext Context
+
+<h3>Servicios Disponibles</h3>
+
+@if (servicios == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="row">
+        @foreach (var s in servicios)
+        {
+            <div class="col-4 mb-3">
+                <div class="card p-3 shadow-sm">
+                    <h5>@s.Nombre</h5>
+                    <p>@s.Descripcion</p>
+                    <strong>@s.Precio.ToString("C")</strong>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    List<Servicio> servicios;
+
+    protected override async Task OnInitializedAsync()
+    {
+        servicios = await Context.Servicios.ToListAsync();
+    }
+}

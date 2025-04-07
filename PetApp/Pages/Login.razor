@@ -1,0 +1,40 @@
+﻿@page "/login"
+@using Microsoft.AspNetCore.Components.Authorization
+@using PetApp.Services
+@inject NavigationManager Navigation
+@inject IAuthService AuthService
+@inject AuthenticationStateProvider AuthProvider
+
+<h3>Iniciar Sesión</h3>
+
+<input @bind="correo" placeholder="Correo electrónico" />
+<br />
+<input @bind="contrasena" type="password" placeholder="Contraseña" />
+<br />
+<button @onclick="IniciarSesion">Entrar</button>
+<p>¿No tienes cuenta? <NavLink href="/registro">Regístrate aquí</NavLink></p>
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+     <p style="color:red">@mensaje</p>
+}
+
+@code {
+    string correo = "";
+    string contrasena = "";
+    string mensaje = "";
+
+    async Task IniciarSesion()
+    {
+        var usuario = await AuthService.LoginAsync(correo, contrasena);
+        if (usuario is not null)
+        {
+            ((CustomAuthProvider)AuthProvider).SetUser(usuario);
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            mensaje = "Correo o contraseña incorrectos.";
+        }
+    }
+}

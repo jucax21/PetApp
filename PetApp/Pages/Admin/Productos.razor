@@ -1,0 +1,83 @@
+﻿@page "/admin/productos"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.EntityFrameworkCore
+@using PetApp.Models
+@inject PetApp.Data.PetServicesContext Context
+@attribute [Authorize(Roles = "Administrador")]
+
+<h3>Gestión de Productos</h3>
+
+<EditForm Model="nuevoProducto" OnValidSubmit="AgregarProducto">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="mb-2">
+        <InputText @bind-Value="nuevoProducto.Nombre" class="form-control" placeholder="Nombre" />
+    </div>
+    <div class="mb-2">
+        <InputNumber @bind-Value="nuevoProducto.Precio" class="form-control" placeholder="Precio" />
+    </div>
+    <div class="mb-2">
+        <InputTextArea @bind-Value="nuevoProducto.Descripcion" class="form-control" placeholder="Descripción" />
+    </div>
+    <div class="mb-2">
+        <InputNumber @bind-Value="nuevoProducto.Stock" class="form-control" placeholder="Stock" />
+    </div>
+    <button class="btn btn-primary">Agregar</button>
+</EditForm>
+
+<hr />
+
+<h4>Lista de productos</h4>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var producto in productos)
+        {
+            <tr>
+                <td>@producto.Nombre</td>
+                <td>@producto.Precio:C</td>
+                <td>@producto.Stock</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" @onclick="() => EliminarProducto(producto.Id)">Eliminar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    List<Producto> productos = new();
+    Producto nuevoProducto = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        productos = await Context.Productos.ToListAsync();
+    }
+
+    async Task AgregarProducto()
+    {
+        Context.Productos.Add(nuevoProducto);
+        await Context.SaveChangesAsync();
+        nuevoProducto = new();
+        productos = await Context.Productos.ToListAsync();
+    }
+
+    async Task EliminarProducto(int id)
+    {
+        var producto = await Context.Productos.FindAsync(id);
+        if (producto != null)
+        {
+            Context.Productos.Remove(producto);
+            await Context.SaveChangesAsync();
+            productos = await Context.Productos.ToListAsync();
+        }
+    }
+}

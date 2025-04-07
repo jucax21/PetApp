@@ -1,0 +1,59 @@
+﻿@page "/admin/usuarios"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using PetApp.Models
+@attribute [Authorize(Roles = "Administrador")]
+@inject PetApp.Data.PetServicesContext Context
+@inject NavigationManager Navigation
+
+<h3>Gestión de Usuarios</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Rol</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in usuarios)
+        {
+            <tr>
+                <td>@u.Nombre</td>
+                <td>@u.Correo</td>
+                <td>@u.Rol</td>
+                <td>
+                    <button class="btn btn-sm btn-warning" @onclick="() => Editar(u.Id)">Editar</button>
+                    <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(u.Id)">Eliminar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    List<Usuario> usuarios = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        usuarios = await Context.Usuarios.ToListAsync();
+    }
+
+    void Editar(int id)
+    {
+        Navigation.NavigateTo($"/admin/editar-usuario/{id}");
+    }
+
+    async Task Eliminar(int id)
+    {
+        var usuario = await Context.Usuarios.FindAsync(id);
+        if (usuario != null)
+        {
+            Context.Usuarios.Remove(usuario);
+            await Context.SaveChangesAsync();
+            usuarios = await Context.Usuarios.ToListAsync(); // refrescar
+        }
+    }
+}

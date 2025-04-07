@@ -1,0 +1,52 @@
+﻿@page "/gestion/citas"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using PetApp.Models
+@attribute [Authorize(Roles = "Administrador")]
+@inject PetApp.Data.PetServicesContext Context
+
+<h3>Todas las Citas Registradas</h3>
+
+@if (citas == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Usuario</th>
+                <th>Mascota</th>
+                <th>Servicio</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in citas)
+            {
+                <tr>
+                    <td>@c.FechaHora</td>
+                    <td>@c.Usuario.UserName</td>
+                    <td>@c.Mascota.Nombre</td>
+                    <td>@c.Servicio.Nombre</td>
+                    <td>@c.Estado</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<Cita> citas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        citas = await Context.Citas
+            .Include(c => c.Usuario)
+            .Include(c => c.Mascota)
+            .Include(c => c.Servicio)
+            .ToListAsync();
+    }
+}

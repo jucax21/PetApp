@@ -1,0 +1,64 @@
+﻿@page "/citas/mis-citas"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using PetApp.Models
+@attribute [Authorize(Roles = "Cliente")]
+@inject UserManager<ApplicationUser> UserManager
+@inject PetApp.Data.PetServicesContext Context
+@inject IHttpContextAccessor HttpContextAccessor
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+
+<h3>Mis Citas</h3>
+
+@if (citas == null)
+{
+    <p>Cargando...</p>
+}
+else if (!citas.Any())
+{
+    <p>No tienes citas registradas.</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var c in citas)
+        {
+            <li class="list-group-item">
+                <strong>Fecha:</strong> @c.FechaHora<br />
+                <strong>Mascota:</strong> @c.Mascota.Nombre<br />
+                <strong>Servicio:</strong> @c.Servicio.Nombre<br />
+                <td>
+                    @if (c.Completada)
+                    {
+                        <span class="text-success">✅ Completada</span>
+                    }
+                    else
+                    {
+                        <span class="text-warning">⏳ Pendiente</span>
+                    }
+                </td>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    List<Cita> citas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await UserManager.GetUserAsync(HttpContextAccessor.HttpContext.User);
+        citas = await Context.Citas
+            .Include(c => c.Mascota)
+            .Include(c => c.Servicio)
+            .Where(c => c.UsuarioId == user.Id)
+            .OrderByDescending(c => c.FechaHora)
+            .ToListAsync();
+    }
+}
+

@@ -1,0 +1,77 @@
+﻿@page "/mis-mascotas"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using PetApp.Models
+@attribute [Authorize(Roles = "Cliente")]
+@inject PetApp.Data.PetServicesContext Context
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<h3>Mis Mascotas</h3>
+
+@if (mascotas == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <button class="btn btn-primary mb-3" @onclick="() => Navigation.NavigateTo(" /mis-mascotas/nueva")">Registrar Nueva Mascota</button>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Raza</th>
+                <th>Edad</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var m in mascotas)
+            {
+                <tr>
+                    <td>@m.Nombre</td>
+                    <td>@m.Tipo</td>
+                    <td>@m.Raza</td>
+                    <td>@m.Edad</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" @onclick="() => EliminarMascota(m.Id)">Eliminar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<Mascota> mascotas = new();
+    int usuarioId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userEmail = authState.User.Identity.Name;
+
+        var usuario = await Context.Usuarios.FirstOrDefaultAsync(u => u.Correo == userEmail);
+        if (usuario != null)
+        {
+            usuarioId = usuario.Id;
+            mascotas = await Context.Mascotas
+                .Where(m => m.UsuarioId == usuario.Id)
+                .ToListAsync();
+        }
+    }
+
+    async Task EliminarMascota(int id)
+    {
+        var mascota = await Context.Mascotas.FindAsync(id);
+        if (mascota != null && mascota.UsuarioId == usuarioId)
+        {
+            Context.Mascotas.Remove(mascota);
+            await Context.SaveChangesAsync();
+            mascotas = await Context.Mascotas.Where(m => m.UsuarioId == usuarioId).ToListAsync();
+        }
+    }
+}

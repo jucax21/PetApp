@@ -1,0 +1,107 @@
+﻿@page "/citas/nueva"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using PetApp.Models
+@attribute [Authorize(Roles = "Cliente")]
+@inject UserManager<ApplicationUser> UserManager
+@inject PetApp.Data.PetServicesContext Context
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor ContextAccessor
+
+<h3>Agendar Nueva Cita</h3>
+
+@if (mascotas == null || servicios == null)
+{
+    <p>Cargando datos...</p>
+}
+else
+{
+    <EditForm Model="cita" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div>
+            <label>Mascota:</label>
+            <InputSelect class="form-control" @bind-Value="cita.MascotaId">
+                <option value="">-- Seleccione --</option>
+                @foreach (var m in mascotas)
+                {
+                    <option value="@m.Id">@m.Nombre</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div>
+            <label>Servicio:</label>
+            <InputSelect class="form-control" @bind-Value="cita.ServicioId">
+                <option value="">-- Seleccione --</option>
+                @foreach (var s in servicios)
+                {
+                    <option value="@s.Id">@s.Nombre</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div>
+            <label>Fecha y hora:</label>
+            <InputDate @bind-Value="fecha" class="form-control" />
+            <input type="time" class="form-control mt-1" @bind="horaString" />
+
+        </div>
+
+        <button class="btn btn-success mt-2">Agendar</button>
+    </EditForm>
+}
+
+@code {
+    Cita cita = new();
+    List<Mascota> mascotas;
+    List<Servicio> servicios;
+    DateTime fecha = DateTime.Today;
+    TimeSpan hora = new(9, 0, 0);
+    string horaString = "09:00";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await UserManager.GetUserAsync(ContextAccessor.HttpContext.User);
+        if (user == null)
+        {
+            // Puedes agregar un mensaje de error o redirigir
+            Navigation.NavigateTo("/Identity/Account/Login");
+            return;
+        }
+        var userId = user.Id;
+
+        mascotas = await Context.Mascotas
+            .Where(m => m.UsuarioId == userId)
+            .ToListAsync();
+
+        servicios = await Context.Servicios.ToListAsync();
+    }
+
+    async Task Guardar()
+    {
+
+        var user = await UserManager.GetUserAsync(ContextAccessor.HttpContext.User);
+        cita.UsuarioId = user.Id;
+        if (TimeSpan.TryParse(horaString, out var horaParsed))
+        {
+            cita.FechaHora = fecha.Date.Add(horaParsed);
+
+            Context.Citas.Add(cita);
+            await Context.SaveChangesAsync();
+            Navigation.NavigateTo("/citas/mis-citas");
+        }
+        else
+        {
+            // Manejar error si falla el parseo
+        }
+
+        Context.Citas.Add(cita);
+        await Context.SaveChangesAsync();
+        Navigation.NavigateTo("/citas/mis-citas");
+    }
+}

@@ -1,0 +1,53 @@
+﻿@page "/admin/servicios/editar/{Id:int}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using PetApp.Models
+@attribute [Authorize(Roles = "Administrador")]
+@inject PetApp.Data.PetServicesContext Context
+@inject NavigationManager Navigation
+
+<h3>Editar Servicio</h3>
+
+@if (servicio == null)
+{
+    <p>Cargando servicio...</p>
+}
+else
+{
+    <EditForm Model="servicio" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div>
+            <label>Nombre:</label>
+            <InputText @bind-Value="servicio.Nombre" class="form-control" />
+        </div>
+        <div>
+            <label>Descripción:</label>
+            <InputTextArea @bind-Value="servicio.Descripcion" class="form-control" />
+        </div>
+        <div>
+            <label>Precio:</label>
+            <InputNumber @bind-Value="servicio.Precio" class="form-control" />
+        </div>
+
+        <button class="btn btn-success mt-2">Guardar</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    Servicio servicio;
+
+    protected override async Task OnInitializedAsync()
+    {
+        servicio = await Context.Servicios.FindAsync(Id);
+    }
+
+    async Task Guardar()
+    {
+        Context.Servicios.Update(servicio);
+        await Context.SaveChangesAsync();
+        Navigation.NavigateTo("/admin/servicios");
+    }
+}

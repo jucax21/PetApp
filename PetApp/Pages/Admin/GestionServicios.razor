@@ -1,0 +1,65 @@
+﻿@page "/admin/servicios"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using PetApp.Models
+@attribute [Authorize(Roles = "Administrador")]
+@inject PetApp.Data.PetServicesContext Context
+@inject NavigationManager Navigation
+
+<h3>Gestión de Servicios</h3>
+
+<button class="btn btn-primary mb-3" @onclick="() => Navigation.NavigateTo(" /admin/servicios/nuevo")">Nuevo Servicio</button>
+
+@if (servicios == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Precio</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in servicios)
+            {
+                <tr>
+                    <td>@s.Nombre</td>
+                    <td>@s.Descripcion</td>
+                    <td>@s.Precio.ToString("C")</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" @onclick="() => Editar(s.Id)">Editar</button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => Eliminar(s.Id)">Eliminar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<Servicio> servicios;
+
+    protected override async Task OnInitializedAsync()
+    {
+        servicios = await Context.Servicios.ToListAsync();
+    }
+
+    void Editar(int id) => Navigation.NavigateTo($"/admin/servicios/editar/{id}");
+
+    async Task Eliminar(int id)
+    {
+        var servicio = await Context.Servicios.FindAsync(id);
+        if (servicio != null)
+        {
+            Context.Servicios.Remove(servicio);
+            await Context.SaveChangesAsync();
+            servicios = await Context.Servicios.ToListAsync();
+        }
+    }
+}

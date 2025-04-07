@@ -1,0 +1,21 @@
+﻿@page "/admin"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize(Roles = "Administrador")]
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthProvider
+
+<h3>Panel de Administración</h3>
+
+<p>Bienvenido, administrador. Aquí puedes gestionar usuarios, servicios, y más.</p>
+
+<ul>
+    <li><NavLink href="/usuarios">Gestión de Usuarios</NavLink></li>
+    <li><NavLink href="/servicios">Gestión de Servicios</NavLink></li>
+    <li><NavLink href="/citas">Ver Citas</NavLink></li>
+    <li><NavLink href="/admin/registrar-usuario">Registrar Usuario</NavLink></li>
+    <li><NavLink href="/admin/usuarios">Gestión de Usuarios</NavLink></li>
+    <li><NavLink href="/admin/mascotas">Gestión de Mascotas</NavLink></li>
+
+
+</ul>

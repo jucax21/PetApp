@@ -1,0 +1,62 @@
+﻿@page "/mis-mascotas/nueva"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using PetApp.Models
+@attribute [Authorize(Roles = "Cliente")]
+@inject PetApp.Data.PetServicesContext Context
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+
+
+<h3>Registrar Mascota</h3>
+
+<EditForm Model="mascota" OnValidSubmit="GuardarMascota">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Nombre:</label>
+        <InputText @bind-Value="mascota.Nombre" class="form-control" />
+    </div>
+    <div>
+        <label>Tipo:</label>
+        <InputText @bind-Value="mascota.Tipo" class="form-control" />
+    </div>
+    <div>
+        <label>Raza:</label>
+        <InputText @bind-Value="mascota.Raza" class="form-control" />
+    </div>
+    <div>
+        <label>Edad:</label>
+        <InputNumber @bind-Value="mascota.Edad" class="form-control" />
+    </div>
+
+    <button class="btn btn-success mt-2">Registrar</button>
+    <button class="btn btn-secondary mt-2" @onclick="() => Navigation.NavigateTo("/mis-mascotas")">Cancelar</button>
+</EditForm>
+
+@code {
+    Mascota mascota = new();
+
+    async Task GuardarMascota()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userEmail = authState.User.Identity?.Name;
+        var usuario = await Context.Usuarios.FirstOrDefaultAsync(u => u.Correo == userEmail);
+
+        if (usuario != null)
+        {
+            mascota.UsuarioId = usuario.Id;
+            Context.Mascotas.Add(mascota);
+            await Context.SaveChangesAsync();
+            Navigation.NavigateTo("/mis-mascotas");
+        }
+    }
+}
